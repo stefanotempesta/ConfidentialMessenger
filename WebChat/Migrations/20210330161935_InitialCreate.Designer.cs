@@ -10,7 +10,7 @@ using WebChat.Data;
 namespace WebChat.Migrations
 {
     [DbContext(typeof(WebChatContext))]
-    [Migration("20210328150931_InitialCreate")]
+    [Migration("20210330161935_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,33 @@ namespace WebChat.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("WebChat.Models.Conversation", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("receiver_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("sender_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Conversations");
+                });
 
             modelBuilder.Entity("WebChat.Models.User", b =>
                 {
