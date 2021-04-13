@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using WebChat.Data;
 using WebChat.Models;
+using PusherServer;
 
 namespace WebChat.Controllers
 {
@@ -17,10 +18,19 @@ namespace WebChat.Controllers
         public ChatController(WebChatContext context)
         {
             _context = context;
+            var options = new PusherOptions();
+            options.Cluster = "ap1";
+            pusher = new Pusher(
+               "1186554",
+               "224a25b62e672be2a092",
+               "23ab34ee56aceeb0efc2",
+               options
+           );
         }
+        
         public async Task<IActionResult> Index()
         {
-            
+
             if (HttpContext.Session.GetInt32("user") == null)
             {
                 return Redirect("/");
@@ -29,9 +39,13 @@ namespace WebChat.Controllers
 
             ViewBag.allUsers = await _context.User.Where(u => u.id != id).ToListAsync();
             ViewBag.currentUser = await _context.User.FirstOrDefaultAsync(m => m.id == id);
-            
+
             return View();
         }
+
+
+
+        [Route("contact/conversations/{contact}")]
         public JsonResult ConversationWithContact(int contact)
         {
             if (HttpContext.Session.GetInt32("user") == null)
@@ -50,6 +64,7 @@ namespace WebChat.Controllers
         }
 
         [HttpPost]
+        [Route("send_message")]
         public JsonResult SendMessage()
         {
             if (HttpContext.Session.GetInt32("user") == null)
@@ -73,10 +88,14 @@ namespace WebChat.Controllers
             _context.SaveChanges();
 
             return Json(convo);
+
+
+            
         }
 
-        [HttpPost]
-        public JsonResult MessageDelivered(int message_id)
+    [HttpPost]
+    [Route("message_delivered/{message_id}")]   
+    public JsonResult MessageDelivered(int message_id)
         {
             Conversation convo = null;
 
@@ -100,6 +119,14 @@ namespace WebChat.Controllers
             }
             return "private-chat-" + user_id + "-" + contact_id;
         }
+
+
+        private Pusher pusher;
+        
+       
+
+       
+       
 
     }
 }

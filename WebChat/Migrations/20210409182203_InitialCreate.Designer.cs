@@ -10,7 +10,7 @@ using WebChat.Data;
 namespace WebChat.Migrations
 {
     [DbContext(typeof(WebChatContext))]
-    [Migration("20210330161935_InitialCreate")]
+    [Migration("20210409182203_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
