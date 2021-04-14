@@ -1,8 +1,8 @@
 ﻿﻿<!DOCTYPE html>
 <html>
 <head>
-  <title>pChat &mdash; Private Chatroom</title>
-  <link rel="stylesheet" href="@Url.Content("~/Content/app.css")">
+  <title>ConfidentialMessenger &mdash; Private Chatroom</title>
+    <link rel="stylesheet" href="~/css/app.css" />
 </head>
 <body>
 
@@ -10,7 +10,7 @@
     <nav class="navbar navbar-inverse">
       <div class="container-fluid">
         <div class="navbar-header">
-          <a class="navbar-brand" href="#">pChat - @ViewBag.currentUser.name </a>
+          <a class="navbar-brand" href="#">ConfidentialMessenger - @ViewBag.currentUser.name </a>
         </div>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="#">Log Out</a></li>
@@ -38,7 +38,7 @@
                         <a class="user__item contact-@user.id" href="#" data-contact-id="@user.id" data-contact-name="@user.name">
                             <li>
                               <div class="avatar">
-                                 <img src="@Url.Content("~/Content/no_avatar.png")">
+                                 <img src="~/no_avatar.png">
                               </div>
                               <span>@user.name</span>
                               <div class="status-bar"></div>
@@ -62,10 +62,13 @@
               </ul>
             </div>
             <div class="chat__type__body">
-              <div class="chat__type">
-                <textarea id="msg_box" placeholder="Type your message"></textarea>
-                <button class="btn btn-primary" id="sendMessage">Send</button>
-              </div>
+                <div class="chat__type">
+                    <textarea id="msg_box" placeholder="Type your message"></textarea>
+                    <button onClick="sendTheMessage()" class="btn btn-primary" id="sendMessage">Send</button>
+
+                   Send
+                    </a>
+                </div>
             </div>
             <div class="chat__typing">
               <span id="typerDisplay"></span>
@@ -74,8 +77,12 @@
         </div>
       </div>
     </div>
-    <script src="@Url.Content("~/Content/app.js")"></script>
+
     <script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/app.js" asp-append-version="true"></script>
     <script>
         //////////// Variable Instantiation
 
@@ -98,8 +105,8 @@
            
                 
             //Pusher client side setup
-        const pusher = new Pusher('1186554', {
-            cluster:'ap1'
+            const pusher = new Pusher('224a25b62e672be2a092', {
+                cluster:'ap1'
             });
 
             pusher.connection.bind('connected', function() {
@@ -159,7 +166,7 @@
         }
         // get chat data        
         function getChat( contact_id ) {
-            $.get("/chat/ConversationWithContact/" + contact_id )
+            $.get("/contact/conversations/" + contact_id )
                 .done( function(resp) {         
                 let chat_data = resp.data || [];
                 loadChat( chat_data );         
@@ -207,16 +214,18 @@
         }, 1000);
         $('#msg_box').on('keyup',isTypingCallback);
         ///////////////////Sending Messages/////////////////////
-        $('#sendMessage').click( function() {
+
+
+        function sendTheMessage() {
             $.post("/send_message", {
                 message: $('#msg_box').val(),
                 contact: currentContact.id,
                 socket_id: socketId,
-            }).done( function (data) {
+            }).done(function (data) {
                 displayMessage(data);
                 $('#msg_box').val('');
             });
-        });
+        }
         function bind_client_events(){
             currentconversationChannel.bind("client-is-typing", function(data) {
                 if ( data.user_id == currentContact.id && data.contact_id == @ViewBag.currentUser.id  ) {

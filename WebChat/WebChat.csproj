@@ -28,4 +28,10 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\css\app.css" />
+    <None Include="wwwroot\js\app.js" />
+    <None Include="wwwroot\no_avatar.png" />
+  </ItemGroup>
+
 </Project>

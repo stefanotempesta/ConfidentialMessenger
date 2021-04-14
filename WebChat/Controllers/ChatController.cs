@@ -74,7 +74,7 @@ namespace WebChat.Controllers
 
             var id = HttpContext.Session.GetInt32("user");
 
-            var currentUser = _context.User.FirstOrDefault(m => m.id == HttpContext.Session.GetInt32("user"));
+            var currentUser = _context.User.FirstOrDefault(m => m.id == id);
             var contact = Convert.ToInt32(Request.Form["contact"]);
             string socket_id = Request.Form["socket_id"];
             Conversation convo = new Conversation
