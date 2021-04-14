@@ -10,7 +10,7 @@ https://docs.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-encla
 
 3. In the appsettings.json file, plugin the values for the confidential SQL database you created in step 1 to the ConnectionString/WebChatContext property. 
 Example:
-   Server=<server name and port; check for the value in the Azure portal>;Initial Catalog=<database name>;Persist Security Info=False;User ID=<admin username>;Password=<password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=300;Column Encryption Setting = Enabled;Attestation Protocol = AAS; Enclave Attestation Url = <attestation URL you created in Step 1>;
+   Server=<server name and port; check for the value in the Azure portal>;Initial Catalog=<database name>;Persist Security Info=False;User ID=<admin username>;Password=<password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Column Encryption Setting = Enabled;Attestation Protocol = AAS; Enclave Attestation Url = <attestation URL you created in Step 1>;
   
 4. In your Visual Studio IDE, go to Tools -> NuGet Package Manager -> Package Manager Console. Create the application tables in your database by running the following command:
    Update-Database
