@@ -18,4 +18,4 @@ Example:
 5. Using Sql Server Management Studio, provision enclave-enabled keys for your database and then encrypt the name column in the User Table. Use Steps 4 and 5 in the tutorial as guide. 
 https://docs.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-enclaves-getting-started
 
-6. The setup of the system is complete and the application can now be run locally.
+6. The setup of the system is complete and the application can be run locally.
