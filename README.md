@@ -1,6 +1,7 @@
 # ConfidentialMessenger
 
-ConfidentialMessenger is a simple web chat application written in C#. Its main feature is that the list of contacts is stored in a confidential SQL database in Azure.
+ConfidentialMessenger is a simple web chat application written in C#. Its main feature is that the list of contacts is stored in a confidential SQL database in Azure. To learn more about confidential SQL databases, refer to the following document.
+https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-enclaves?view=sql-server-ver15
 
 1. The first step in replicating this system is to provision a confidential SQL database using Steps 1 and 2 of the following tutorial.
 https://docs.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-enclaves-getting-started
