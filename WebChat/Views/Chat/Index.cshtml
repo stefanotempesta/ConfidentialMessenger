@@ -64,10 +64,8 @@
             <div class="chat__type__body">
                 <div class="chat__type">
                     <textarea id="msg_box" placeholder="Type your message"></textarea>
-                    <button onClick="sendTheMessage()" class="btn btn-primary" id="sendMessage">Send</button>
+                    <a id="sendMessageButton" href="#">Send</a>
 
-                   Send
-                    </a>
                 </div>
             </div>
             <div class="chat__typing">
@@ -87,14 +85,14 @@
         //////////// Variable Instantiation
 
             function throttle(callback, wait, context = this) {
-  let timeout = null 
+  let timeout = null
   let callbackArgs = null
-  
+
   const later = () => {
     callback.apply(context, callbackArgs)
     timeout = null
   }
-  
+
   return function() {
     if (!timeout) {
       callbackArgs = arguments
@@ -102,8 +100,8 @@
     }
   }
 }
-           
-                
+
+
             //Pusher client side setup
             const pusher = new Pusher('224a25b62e672be2a092', {
                 cluster:'ap1'
@@ -116,7 +114,7 @@
         let socketId = null;
         let currentconversationChannel = null;//pusher.subscribe('chat-' + @ViewBag.currentUser.id );
         let conversationChannelName = null;
-        let newMessageTpl = 
+        let newMessageTpl =
         `<div>
             <div id="msg-{{id}}" class="row __chat__par__">
                 <div class="__chat__">
@@ -128,7 +126,7 @@
     /////////////////////////////////
         const chatAppChannel = pusher.subscribe('presence-chat');
         chatAppChannel.bind("pusher:subscription_succeeded", function(members) {
-            
+
             members.each(function(member) {
                 setContactStatus(member.info.id, 1);
             });
@@ -164,12 +162,12 @@
             }
             $('.chat__main').append(template);
         }
-        // get chat data        
+        // get chat data
         function getChat( contact_id ) {
             $.get("/contact/conversations/" + contact_id )
-                .done( function(resp) {         
+                .done( function(resp) {
                 let chat_data = resp.data || [];
-                loadChat( chat_data );         
+                loadChat( chat_data );
                 });
         }
         //load chat data into view
@@ -177,7 +175,7 @@
             chat_data.forEach( function(data) {
                 displayMessage(data);
             });
-            
+
             $('.chat__body').show();
             $('.__no__chat__').hide();
         }
@@ -194,7 +192,7 @@
             conversationChannelName = getConvoChannel( (@ViewBag.currentUser.id * 1) ,  (currentContact.id * 1) );
             currentconversationChannel = pusher.subscribe(conversationChannelName);
             bind_client_events();
-                                        
+
             $('#contacts').find('li').removeClass('active');
             $('#contacts .contact-' + currentContact.id).find('li').addClass('active');
             getChat(currentContact.id);
@@ -215,6 +213,18 @@
         $('#msg_box').on('keyup',isTypingCallback);
         ///////////////////Sending Messages/////////////////////
 
+        $('#sendMessageButton').click(function (e) {
+                e.preventDefault();
+                $.post("/send_message",
+                    {
+                        message: $('#msg_box').val(),
+                        contact: currentContact.id,
+                        socket_id: socketId,
+                    }).done(function (data) {
+                        displayMessage(data);
+                        $('#msg_box').val('');
+                    });
+            });
 
         function sendTheMessage() {
             $.post("/send_message", {
@@ -230,7 +240,7 @@
             currentconversationChannel.bind("client-is-typing", function(data) {
                 if ( data.user_id == currentContact.id && data.contact_id == @ViewBag.currentUser.id  ) {
                     $('#typerDisplay').text( currentContact.name + ' is typing...');
-                
+
                     $('.chat__typing').fadeIn(100, function() {
                         $('.chat__type__body').addClass('typing_display__open');
                     }).delay(1000).fadeOut(300, function(){
