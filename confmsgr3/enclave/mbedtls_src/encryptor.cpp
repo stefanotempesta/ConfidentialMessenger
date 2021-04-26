@@ -121,7 +121,8 @@ void ecall_dispatcher::close()
 
 void ecall_dispatcher::read_file() {
 	string line;
-	ifstream myfile("./contacts.txt");
+
+	ifstream myfile("/home/azureuser/confmsgr3/contacts.txt");
 	if (myfile.is_open())
 	{
 		while (getline(myfile, line))
@@ -131,7 +132,7 @@ void ecall_dispatcher::read_file() {
 		myfile.close();
 	}
 
-	else cout << "Unable to open file";
+	else cout << "Unable to open file here";
         TRACE_ENCLAVE("ecall_dispatcher::read_file");
 
 }
