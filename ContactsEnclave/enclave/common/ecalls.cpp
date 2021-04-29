@@ -4,7 +4,7 @@
 #include <openenclave/enclave.h>
 
 #include "encryptor.h"
-#include "fileencryptor_t.h"
+#include "contactsenclave_t.h"
 #include "shared.h"
 
 // Declare a static dispatcher object for enabling for better organization

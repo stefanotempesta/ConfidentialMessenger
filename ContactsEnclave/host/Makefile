@@ -12,13 +12,13 @@ all: build
 
 build:
 	@ echo "Compilers used: $(CC), $(CXX)"
-	oeedger8r ../fileencryptor.edl --untrusted \
+	oeedger8r ../contactsenclave.edl --untrusted \
 		--search-path $(INCDIR) \
 		--search-path $(INCDIR)/openenclave/edl/sgx
-	$(CXX) -g -c $(CXXFLAGS) -I"/home/azureuser/confmsgr3/host/restbed/distribution/include" host.cpp host.cpp
-	$(CC) -g -c $(CFLAGS) fileencryptor_u.c
-	$(CXX) -o file-encryptorhost host.o fileencryptor_u.o $(LDFLAGS) -L"/home/azureuser/confmsgr3/host/restbed/distribution/library" -lrestbed
+	$(CXX) -g -c $(CXXFLAGS) -I"../host/restbed/distribution/include" host.cpp host.cpp
+	$(CC) -g -c $(CFLAGS) contactsenclave_u.c
+	$(CXX) -o file-encryptorhost host.o contactsenclave_u.o $(LDFLAGS) -L"../host/restbed/distribution/library" -lrestbed
 
 clean:
-	rm -f file-encryptorhost fileencryptor_u.* fileencryptor_args.h *.o ../out.decrypted ../out.encrypted
+	rm -f file-encryptorhost contactsenclave_u.* contactsenclave_args.h *.o ../out.decrypted ../out.encrypted
 

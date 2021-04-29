@@ -22,13 +22,13 @@ all:
 
 build:
 	@ echo "Compilers used: $(CC), $(CXX)"
-	oeedger8r ../fileencryptor.edl --trusted \
+	oeedger8r ../contactsenclave.edl --trusted \
 		--search-path $(INCDIR) \
 		--search-path $(INCDIR)/openenclave/edl/sgx
 	$(CXX) -g -c $(CXXFLAGS) -DOE_API_VERSION=2 -std=c++11 $(CXXINCDIR) \
 		$(CXXSRCS)
-	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 fileencryptor_t.c -o fileencryptor_t.o
-	$(CXX) -o file-encryptorenc ecalls.o encryptor.o keys.o fileencryptor_t.o $(LDFLAGS) $(CRYPTO_LDFLAGS)
+	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 contactsenclave_t.c -o contactsenclave_t.o
+	$(CXX) -o file-encryptorenc ecalls.o encryptor.o keys.o contactsenclave_t.o $(LDFLAGS) $(CRYPTO_LDFLAGS)
 
 
 sign:

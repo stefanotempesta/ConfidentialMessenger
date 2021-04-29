@@ -13,7 +13,7 @@
 #include <vector>
 #include "../shared.h"
 
-#include "fileencryptor_u.h"
+#include "contactsenclave_u.h"
 
 #include <string>
 #include <memory>
@@ -50,14 +50,20 @@ void read_in_host_file() {
             countUsers++;
         }
     }
-    else cout << "Unable to open file";
+    else cout << "Unable to open file" << endl;
     users = new user[100];
     myfile.clear();
     myfile.seekg(0);
     for(int i = 0; i < countUsers; i++)
         {
         myfile >> users[i].id >> users[i].name;
-        users[i].name = users[i].name.substr(1, users[i].name.length() - 1);
+        try {
+            users[i].name = users[i].name.substr(1, users[i].name.length() - 1);
+        }
+        catch (std::out_of_range& exception) {
+            cout << "Unusual username:" + users[i].name << endl;
+        }
+        
         }
     myfile.close();
 }
@@ -81,29 +87,19 @@ void get_method_handler(const shared_ptr< restbed::Session > session)
         }
         //data = data + "{" + to_string(users[i].id) + "," + users[i].name + "},";
     }
-    /* sample format: TODO: info will be coming from enclave and the name value  is encrypted
-    "user": {
-         "id": 1,
-         "name": ""
-    }
-    */
-    cout << "after match" + to_string(matchindex) + namestr << endl;
+
     if (matchindex >= 0) {
-        cout << "in match" + to_string(matchindex) << endl;
         //data = data + "\"user\":{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
         data = data + "{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
     }
     else {
-        cout << "in no match" + to_string(matchindex) << endl;
         countUsers++;
         //data = data + "{" + to_string(countUsers) + "," + namestr + "}";
        // data = data + "\"user\":{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
         data = data + "{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
         users[countUsers - 1].id = countUsers;
         users[countUsers - 1].name = namestr;
-        
 
-        cout << "in writing to file"  << endl;
         string filename = "./contacts.txt";
         ofstream file_out;
         file_out.open(filename, ios_base::app);
@@ -113,7 +109,6 @@ void get_method_handler(const shared_ptr< restbed::Session > session)
     }
 
      cout << data << endl;
-
     session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
 }
 
@@ -123,52 +118,26 @@ void post_method_handler(const shared_ptr< restbed::Session > session)
 
     const auto& request = session->get_request();
     int matchindex = -1;
-
-    //const string body = "single method";
-   // const string body = "\"user\": {\"id\": 1, \"name\": " + request->get_path_parameter("name") + "\"";
-    //string namestr = request->get_path_parameter("name");
-    
-   // string namestr(request->get_body().data());
-    size_t len;
-    cout << "here" << endl;
-   // string namestr(reinterpret_cast<char const*>(request->get_body().data()), len);
-    string namestr = "ryan";
-    cout << "here1" << endl;
-    cout << request << endl;
-    cout << namestr << endl;
+    string namestr = ""; //TODO:if need to use POST, get value of namestr from request
     string data = "";
     for (int i = 0; i < countUsers; i++)
     {
         cout << "in loop" + to_string(i) << endl;
         if (users[i].name.compare(namestr) == 0) {
-            cout << "found match" << endl;
             matchindex = i;
         }
-        //data = data + "{" + to_string(users[i].id) + "," + users[i].name + "},";
+
     }
-    /* sample format: TODO: info will be coming from enclave and the name value  is encrypted
-    "user": {
-         "id": 1,
-         "name": ""
-    }
-    */
-    cout << "after match" + to_string(matchindex) + namestr << endl;
+
     if (matchindex >= 0) {
-        cout << "in match" + to_string(matchindex) << endl;
-        //data = data + "\"user\":{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
         data = data + "{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
     }
     else {
-        cout << "in no match" + to_string(matchindex) << endl;
         countUsers++;
-        //data = data + "{" + to_string(countUsers) + "," + namestr + "}";
-       // data = data + "\"user\":{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
         data = data + "{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
         users[countUsers - 1].id = countUsers;
         users[countUsers - 1].name = namestr;
 
-
-        cout << "in writing to file" << endl;
         string filename = "./contacts.txt";
         ofstream file_out;
         file_out.open(filename, ios_base::app);
@@ -184,32 +153,13 @@ void post_method_handler(const shared_ptr< restbed::Session > session)
 
 void list_get_method_handler(const shared_ptr< Session > session)
 {
-    /* sample format: TODO: info will be coming from enclave and the name value  is encrypted
-   "users": [{
-        "id": 1,
-        "name": ""
-   }, {
-        "id": 2,
-        "name": ""
-   }
-   ]
-   */
+
     const auto& request = session->get_request();
-    //const string body = "users method";
-    //const string body = "\"users\": [{\"id\": 1, \"name\" : \"Ryan\"}, {\"id\": 2, \"name\" : \"Rey\"}]";
+
     string data = "[";
     for (int i = 0; i < countUsers; i++)
     {
-        /* sample format: TODO: info will be coming from enclave and the name value  is encrypted
-   "users": [{
-        "id": 1,
-        "name": ""
-   }, {
-        "id": 2,
-        "name": ""
-   }
-   ]
-   */
+
         data = data + "{\"id\":" + to_string(users[i].id) + ",\"name\":\"" +  users[i].name + "\"}";
         if (i < countUsers - 1) {
             data = data + ",";
@@ -281,33 +231,7 @@ exit:
     return ret;
 }
 
-// Compare file1 and file2: return 0 if the first file1.size bytes of the file2
-// is equal to file1's contents  Otherwise it returns 1
-int compare_2_files(const char* first_file, const char* second_file)
-{
-    int ret = 0;
-    std::ifstream f1(first_file, std::ios::binary);
-    std::ifstream f2(second_file, std::ios::binary);
-    std::vector<uint8_t> f1_data_bytes = std::vector<uint8_t>(
-        std::istreambuf_iterator<char>(f1), std::istreambuf_iterator<char>());
-    std::vector<uint8_t> f2_data_bytes = std::vector<uint8_t>(
-        std::istreambuf_iterator<char>(f2), std::istreambuf_iterator<char>());
-    std::vector<uint8_t>::iterator f1iterator = f1_data_bytes.begin();
-    std::vector<uint8_t>::iterator f2iterator = f2_data_bytes.begin();
 
-    // compare files
-    for (; f1iterator != f1_data_bytes.end() - 1; ++f1iterator, ++f2iterator)
-    {
-        if (!(*f1iterator == *f2iterator))
-        {
-            ret = 1;
-            break;
-        }
-    }
-    cout << "Host: two files are " << ((ret == 0) ? "equal" : "not equal")
-        << endl;
-    return ret;
-}
 
 int encrypt_file(
     bool encrypt,
@@ -579,79 +503,21 @@ int main(int argc, const char* argv[])
 {
     oe_result_t result;
     int ret = 0;
-    const char* input_file = argv[1];
-    const char* encrypted_file = "./out.encrypted";
-    const char* decrypted_file = "./out.decrypted";
 
     uint32_t flags = OE_ENCLAVE_FLAG_DEBUG;
 
     cout << "Host: enter main" << endl;
 
     cout << "Host: create enclave for image:" << argv[2] << endl;
-    result = oe_create_fileencryptor_enclave(
+    result = oe_create_contactsenclave_enclave(
         argv[2], OE_ENCLAVE_TYPE_SGX, flags, NULL, 0, &enclave);
     if (result != OE_OK)
     {
-        cerr << "oe_create_fileencryptor_enclave() failed with " << argv[0]
+        cerr << "oe_create_contactsenclave_enclave() failed with " << argv[0]
              << " " << result << endl;
         ret = 1;
         cout << "Host: error creating enclave" << endl;
     }
-
-    // encrypt a file
-    cout << "Host: encrypting file:" << input_file
-        << " -> file:" << encrypted_file << endl;
-    ret = encrypt_file(
-        ENCRYPT_OPERATION, "anyPasswordYouLike", input_file, encrypted_file);
-    if (ret != 0)
-    {
-        cerr << "Host: processFile(ENCRYPT_OPERATION) failed with " << ret
-            << endl;
-        //goto exit;
-    }
-
-    // Make sure the encryption was doing something. Input and encrypted files
-    // are not equal
-    cout << "Host: compared file:" << encrypted_file
-        << " to file:" << decrypted_file << endl;
-    ret = compare_2_files(input_file, encrypted_file);
-    if (ret == 0)
-    {
-        cerr << "Host: checking failed! " << input_file
-            << "'s contents are not supposed to be same as " << encrypted_file
-            << endl;
-        //goto exit;
-    }
-    cout << "Host: " << input_file << " is NOT equal to " << decrypted_file
-        << "as expected" << endl;
-    cout << "Host: encryption was done successfully" << endl;
-
-    // Decrypt a file
-    cout << "Host: decrypting file:" << encrypted_file
-        << " to file:" << decrypted_file << endl;
-
-    ret = encrypt_file(
-        DECRYPT_OPERATION,
-        "anyPasswordYouLike",
-        encrypted_file,
-        decrypted_file);
-    if (ret != 0)
-    {
-        cerr << "Host: processFile(DECRYPT_OPERATION) failed with " << ret
-            << endl;
-        //goto exit;
-    }
-    cout << "Host: compared file:" << encrypted_file
-        << " to file:" << decrypted_file << endl;
-    ret = compare_2_files(input_file, decrypted_file);
-    if (ret != 0)
-    {
-        cerr << "Host: checking failed! " << input_file
-            << "'s is supposed to be same as " << decrypted_file << endl;
-        //goto exit;
-    }
-    cout << "Host: " << input_file << " is equal to " << decrypted_file << endl;
-
 
     read_in_host_file();
     //read_file(enclave);
