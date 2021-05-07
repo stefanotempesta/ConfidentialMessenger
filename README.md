@@ -26,5 +26,28 @@ https://docs.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-encla
 
 B. Using Confidential Enclave in Azure VM
 This version of ConfidentialMessenger uses a confidential enclave in a special Azure VM to store contacts data. The VM hosts an application that uses openenclave SDK architecture to store and serve the contact list data to client applications. The data server application is written in C++ and uses restbed SDK to implement REST server functionalities. The web application is written in C# and an Azure SL database is used to store the chat messages.
-TODO: Instructions on setting up, building and running this version
+The ConfidentialMessenger application using a confidential enclave to store the contact list is composed of two systems. 
+
+I. ContactsEnclave
+First, we will setup the ContactsEnclave, a C++ application used to manage and store the contact list used by the chat application. It uses the openenclave architecture and also uses restbed-io, a C++ API for REST server functionalities.
+1. The first step is to provision an Azure virtual machine that supports confidential computing. Follow the instructions in this tutorial (https://docs.microsoft.com/en-us/azure/confidential-computing/quick-create-portal) up to the installation of the Open Enclave SDK. For the purpose of this POC system, the VMsize selected was Standard DC1s_v2 (1 vcpus, 4 GiB memory) and the VM operating system selected is Linux (ubuntu 18.04), though other options are possible depending on need and preference.
+2. Connect to the server using Putty or other SSH terminal, clone the ConfidentialMessenger repository in your home directory.
+3. Navigate to the ContactsEnclave -> host folder, and then clone and build the Restbed repository.
+    https://github.com/Corvusoft/restbed#build
+4. Navigate to the ContactsEnclave directory and run the following commands:
+    . /opt/openenclave/share/openenclave/openenclaverc
+    make build
+    export LD_LIBRARY_PATH="./ContactsEnclave/host/restbed/distribution/library"
+    nohup make run
+5. The ContactsEnclave server will now be running. Verify by opening another terminal and running the following curl command
+    curl -w'\n' -v -XGET 'http://localhost:1984/users'
+    
+II. ConfidentialMessengerVM
+The ConfidentialMessengerVM is the .NET Core/C# application that serves the actual web chat functionalities. The only difference with the ConfidentialMessengerDB is that instead of connecting to a confidential database for the contacts data, it sends a request to the ContactsEnclave REST server. The Conversations data on the other hand is stored in an Azure database. 
+1. In Visual Studio, open the project/solution inside the ConfidentialMessengerVM folder.
+2. Publish the application to a local folder.
+3. Using an FTP client, copy the publish folder and contents to your home directory in the VM
+4. Create an NGINX service to host the web application. Refer to the following resource:
+    https://hbhhathorn.medium.com/install-an-asp-net-core-web-api-on-linux-ubuntu-18-04-and-host-with-nginx-and-ssl-2ed9df7371fb
+5. Open a browser and navigate to the web application.
 
