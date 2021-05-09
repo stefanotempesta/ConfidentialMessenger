@@ -15,7 +15,7 @@ build:
 	oeedger8r ../contactsenclave.edl --untrusted \
 		--search-path $(INCDIR) \
 		--search-path $(INCDIR)/openenclave/edl/sgx
-	$(CXX) -g -c $(CXXFLAGS) -I"../host/restbed/distribution/include" host.cpp host.cpp
+	$(CXX) -g -c $(CXXFLAGS) -I"../host/restbed/distribution/include" host.cpp 
 	$(CC) -g -c $(CFLAGS) contactsenclave_u.c
 	$(CXX) -o file-encryptorhost host.o contactsenclave_u.o $(LDFLAGS) -L"../host/restbed/distribution/library" -lrestbed
 

@@ -41,115 +41,9 @@ user* users = NULL;
 int countUsers = 0;
 
 
-void read_in_host_file() {
-    string line;
-    ifstream myfile("./contacts.txt");
-    if (myfile.is_open())
-    {
-        while (getline(myfile, line)) {
-            countUsers++;
-        }
-    }
-    else cout << "Unable to open file" << endl;
-    users = new user[100];
-    myfile.clear();
-    myfile.seekg(0);
-    for(int i = 0; i < countUsers; i++)
-        {
-        myfile >> users[i].id >> users[i].name;
-        try {
-            users[i].name = users[i].name.substr(1, users[i].name.length() - 1);
-        }
-        catch (std::out_of_range& exception) {
-            cout << "Unusual username:" + users[i].name << endl;
-        }
-        
-        }
-    myfile.close();
-}
-
-void get_method_handler(const shared_ptr< restbed::Session > session)
-{
-    
-    const auto& request = session->get_request();
-    int matchindex = -1;
-
-    //const string body = "single method";
-   // const string body = "\"user\": {\"id\": 1, \"name\": " + request->get_path_parameter("name") + "\"";
-    string namestr = request->get_path_parameter("name");
-    string data = "";
-    for (int i = 0; i < countUsers; i++)
-    {
-        cout << "in loop" + to_string(i) << endl;
-        if (users[i].name.compare(namestr) == 0) {
-            cout << "found match" << endl;
-            matchindex = i;
-        }
-        //data = data + "{" + to_string(users[i].id) + "," + users[i].name + "},";
-    }
-
-    if (matchindex >= 0) {
-        //data = data + "\"user\":{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
-        data = data + "{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
-    }
-    else {
-        countUsers++;
-        //data = data + "{" + to_string(countUsers) + "," + namestr + "}";
-       // data = data + "\"user\":{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
-        data = data + "{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
-        users[countUsers - 1].id = countUsers;
-        users[countUsers - 1].name = namestr;
-
-        string filename = "./contacts.txt";
-        ofstream file_out;
-        file_out.open(filename, ios_base::app);
-        file_out << to_string(countUsers) + "," + namestr << endl;
-        file_out.close();
-        
-    }
-
-     cout << data << endl;
-    session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
-}
-
-void post_method_handler(const shared_ptr< restbed::Session > session)
-{
 
 
-    const auto& request = session->get_request();
-    int matchindex = -1;
-    string namestr = ""; //TODO:if need to use POST, get value of namestr from request
-    string data = "";
-    for (int i = 0; i < countUsers; i++)
-    {
-        cout << "in loop" + to_string(i) << endl;
-        if (users[i].name.compare(namestr) == 0) {
-            matchindex = i;
-        }
 
-    }
-
-    if (matchindex >= 0) {
-        data = data + "{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
-    }
-    else {
-        countUsers++;
-        data = data + "{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
-        users[countUsers - 1].id = countUsers;
-        users[countUsers - 1].name = namestr;
-
-        string filename = "./contacts.txt";
-        ofstream file_out;
-        file_out.open(filename, ios_base::app);
-        file_out << to_string(countUsers) + "," + namestr << endl;
-        file_out.close();
-
-    }
-
-    cout << data << endl;
-
-    session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
-}
 
 void list_get_method_handler(const shared_ptr< Session > session)
 {
@@ -170,48 +64,9 @@ void list_get_method_handler(const shared_ptr< Session > session)
     session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
 }
 
-bool check_simulate_opt(int* argc, const char* argv[])
-{
-    for (int i = 0; i < *argc; i++)
-    {
-        if (strcmp(argv[i], "--simulate") == 0)
-        {
-            cout << "Running in simulation mode" << endl;
-            memmove(&argv[i], &argv[i + 1], (*argc - i) * sizeof(char*));
-            (*argc)--;
-            return true;
-        }
-    }
-    return false;
-}
 
-// Dump Encryption header
-void dump_header(encryption_header_t* _header)
-{
-    cout << "--------- Dumping header -------------\n";
-    cout << "Host: fileDataSize = " << _header->file_data_size << endl;
 
-    cout << "Host: password digest:\n";
-    for (int i = 0; i < HASH_VALUE_SIZE_IN_BYTES; i++)
-    {
-        cout << "Host: digest[" << i << "]" << std::hex
-            << (unsigned int)(_header->digest[i]) << endl;
-    }
 
-    cout << "Host: encryption key" << endl;
-    for (int i = 0; i < ENCRYPTION_KEY_SIZE_IN_BYTES; i++)
-    {
-        cout << "Host: key[" << i << "]=" << std::hex
-            << (unsigned int)(_header->encrypted_key[i]) << endl;
-    }
-
-    cout << "Host: salt and IV" << endl;
-    for (int i = 0; i < SALT_SIZE_IN_BYTES; i++)
-    {
-        cout << "Host: salt[" << i << "]=" << std::hex
-            << (unsigned int)(_header->salt[i]) << endl;
-    }
-}
 
 // get the file size
 int get_file_size(FILE* file, size_t* _file_size)
@@ -498,29 +353,179 @@ exit:
     return ret;
 }
 
+void get_method_handler(const shared_ptr< restbed::Session > session)
+{
+    int ret = 0;
+    const char* encrypted_file = "./out.encrypted";
+    const char* decrypted_file = "./out.decrypted";
+    const auto& request = session->get_request();
+    int matchindex = -1;
+
+    string namestr = request->get_path_parameter("name");
+    string data = "";
+    for (int i = 0; i < countUsers; i++)
+    {
+        cout << "in loop" + to_string(i) << endl;
+        if (users[i].name.compare(namestr) == 0) {
+            cout << "found match" << endl;
+            matchindex = i;
+        }
+    }
+
+    if (matchindex >= 0) {
+        data = data + "{\"id\":" + to_string(users[matchindex].id) + ",\"name\":\"" + users[matchindex].name + "\"}";
+    }
+    else {
+        countUsers++;
+        data = data + "{\"id\":" + to_string(countUsers) + ",\"name\":\"" + namestr + "\"}";
+        users[countUsers - 1].id = countUsers;
+        users[countUsers - 1].name = namestr;
+
+        cout << "Host: decrypting file:" << encrypted_file
+            << " to file:" << decrypted_file << endl;
+
+        ret = encrypt_file(
+            DECRYPT_OPERATION,
+            "anyPasswordYouLike",
+            encrypted_file,
+            decrypted_file);
+        if (ret != 0)
+        {
+            cerr << "Host: processFile(DECRYPT_OPERATION) failed with " << ret
+                << endl;
+          //  return 1;
+        }
+
+        string filename = decrypted_file;
+        ofstream file_out;
+        file_out.open(filename, ios_base::app);
+        file_out << to_string(countUsers) + "," + namestr << endl;
+        file_out.close();
+
+        cout << "Host: encrypting file:" << decrypted_file
+            << " -> file:" << encrypted_file << endl;
+        ret = encrypt_file(
+            ENCRYPT_OPERATION, "anyPasswordYouLike", decrypted_file, encrypted_file);
+        if (ret != 0)
+        {
+            cerr << "Host: processFile(ENCRYPT_OPERATION) failed with " << ret
+                << endl;
+           // return 1;
+        }
+        remove(decrypted_file);
+    }
+
+    cout << data << endl;
+    session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
+}
+
+
+
+int read_in_host_file() {
+    // Decrypt a file
+    const char* encrypted_file = "./out.encrypted";
+    const char* decrypted_file = "./out.decrypted";
+    int ret = 0;
+    cout << "Host: decrypting file:" << encrypted_file
+        << " to file:" << decrypted_file << endl;
+
+    ret = encrypt_file(
+        DECRYPT_OPERATION,
+        "anyPasswordYouLike",
+        encrypted_file,
+        decrypted_file);
+    if (ret != 0)
+    {
+        cerr << "Host: processFile(DECRYPT_OPERATION) failed with " << ret
+            << endl;
+        return 1;
+    }
+
+
+    string line;
+    ifstream myfile("./out.decrypted");
+    if (myfile.is_open())
+    {
+        while (getline(myfile, line)) {
+            countUsers++;
+        }
+    }
+    else cout << "Unable to open file" << endl;
+    users = new user[100];
+    myfile.clear();
+    myfile.seekg(0);
+    for (int i = 0; i < countUsers; i++)
+    {
+        myfile >> users[i].id >> users[i].name;
+        try {
+            users[i].name = users[i].name.substr(1, users[i].name.length() - 1);
+        }
+        catch (std::out_of_range& exception) {
+            cout << "Unusual username:" + users[i].name << endl;
+        }
+
+    }
+    myfile.close();
+    remove(decrypted_file);
+    return 0;
+}
 
 int main(int argc, const char* argv[])
 {
     oe_result_t result;
     int ret = 0;
-
+    const char* input_file = "./testfile";
+    const char* encrypted_file = "./out.encrypted";
+    const char* decrypted_file = "./out.decrypted";
     uint32_t flags = OE_ENCLAVE_FLAG_DEBUG;
 
     cout << "Host: enter main" << endl;
-
     cout << "Host: create enclave for image:" << argv[2] << endl;
     result = oe_create_contactsenclave_enclave(
         argv[2], OE_ENCLAVE_TYPE_SGX, flags, NULL, 0, &enclave);
     if (result != OE_OK)
     {
-        cerr << "oe_create_contactsenclave_enclave() failed with " << argv[0]
-             << " " << result << endl;
-        ret = 1;
-        cout << "Host: error creating enclave" << endl;
+        cerr << "oe_create_fileencryptor_enclave() failed with " << argv[0]
+            << " " << result << endl;
+        return 1;
     }
 
-    read_in_host_file();
+    // encrypt a file
+ /*   cout << "Host: encrypting file:" << input_file
+        << " -> file:" << encrypted_file << endl;
+    ret = encrypt_file(
+        ENCRYPT_OPERATION, "anyPasswordYouLike", input_file, encrypted_file);
+    if (ret != 0)
+    {
+        cerr << "Host: processFile(ENCRYPT_OPERATION) failed with " << ret
+            << endl;
+        return 1;
+    }
+*/
+    // Decrypt a file
+ /*   cout << "Host: decrypting file:" << encrypted_file
+        << " to file:" << decrypted_file << endl;
+
+    ret = encrypt_file(
+        DECRYPT_OPERATION,
+        "anyPasswordYouLike",
+        encrypted_file,
+        decrypted_file);
+    if (ret != 0)
+    {
+        cerr << "Host: processFile(DECRYPT_OPERATION) failed with " << ret
+            << endl;
+        return 1;
+    }
+*/
+    ret = read_in_host_file();
     //read_file(enclave);
+    if (ret != 0)
+    {
+        cerr << "Host: read_in_host_file failed with " << ret
+            << endl;
+        return 1;
+    }
 
     auto resource = make_shared< Resource >();
     resource->set_path("/user/{name: .*}");
@@ -546,8 +551,6 @@ int main(int argc, const char* argv[])
 
     return EXIT_SUCCESS;
 
-
-
-
+ 
 
 }
