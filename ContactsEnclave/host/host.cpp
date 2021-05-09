@@ -53,7 +53,9 @@ void list_get_method_handler(const shared_ptr< Session > session)
     string data = "[";
     for (int i = 0; i < countUsers; i++)
     {
-
+        if (users[i].name == "") {
+            continue;
+        }
         data = data + "{\"id\":" + to_string(users[i].id) + ",\"name\":\"" +  users[i].name + "\"}";
         if (i < countUsers - 1) {
             data = data + ",";
@@ -412,7 +414,7 @@ void get_method_handler(const shared_ptr< restbed::Session > session)
                 << endl;
            // return 1;
         }
-        remove(decrypted_file);
+       // remove(decrypted_file);
     }
 
     cout << data << endl;
@@ -461,12 +463,13 @@ int read_in_host_file() {
             users[i].name = users[i].name.substr(1, users[i].name.length() - 1);
         }
         catch (std::out_of_range& exception) {
+            users[i].name = "";
             cout << "Unusual username:" + users[i].name << endl;
         }
 
     }
     myfile.close();
-    remove(decrypted_file);
+   // remove(decrypted_file);
     return 0;
 }
 
@@ -491,7 +494,7 @@ int main(int argc, const char* argv[])
     }
 
     // encrypt a file
- /*   cout << "Host: encrypting file:" << input_file
+  /*  cout << "Host: encrypting file:" << input_file
         << " -> file:" << encrypted_file << endl;
     ret = encrypt_file(
         ENCRYPT_OPERATION, "anyPasswordYouLike", input_file, encrypted_file);
@@ -501,7 +504,7 @@ int main(int argc, const char* argv[])
             << endl;
         return 1;
     }
-*/
+    return 0;*/
     // Decrypt a file
  /*   cout << "Host: decrypting file:" << encrypted_file
         << " to file:" << decrypted_file << endl;
