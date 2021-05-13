@@ -29,7 +29,6 @@ using namespace restbed;
 #define ENCRYPT_OPERATION true
 #define DECRYPT_OPERATION false
 
-
 oe_enclave_t* enclave = NULL;
 
 struct user {
@@ -39,11 +38,6 @@ struct user {
 
 user* users = NULL;
 int countUsers = 0;
-
-
-
-
-
 
 void list_get_method_handler(const shared_ptr< Session > session)
 {
@@ -62,13 +56,8 @@ void list_get_method_handler(const shared_ptr< Session > session)
         }
     }
     data = data + "]";
-    cout << data << endl;
     session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
 }
-
-
-
-
 
 // get the file size
 int get_file_size(FILE* file, size_t* _file_size)
@@ -87,8 +76,6 @@ int get_file_size(FILE* file, size_t* _file_size)
 exit:
     return ret;
 }
-
-
 
 int encrypt_file(
     bool encrypt,
@@ -367,9 +354,7 @@ void get_method_handler(const shared_ptr< restbed::Session > session)
     string data = "";
     for (int i = 0; i < countUsers; i++)
     {
-        cout << "in loop" + to_string(i) << endl;
         if (users[i].name.compare(namestr) == 0) {
-            cout << "found match" << endl;
             matchindex = i;
         }
     }
@@ -414,10 +399,9 @@ void get_method_handler(const shared_ptr< restbed::Session > session)
                 << endl;
            // return 1;
         }
-       // remove(decrypted_file);
+        remove(decrypted_file);
     }
 
-    cout << data << endl;
     session->close(OK, data, { { "Content-Length", ::to_string(data.size()) } });
 }
 
@@ -469,7 +453,7 @@ int read_in_host_file() {
 
     }
     myfile.close();
-   // remove(decrypted_file);
+    remove(decrypted_file);
     return 0;
 }
 

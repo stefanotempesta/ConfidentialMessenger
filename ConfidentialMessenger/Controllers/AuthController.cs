@@ -7,24 +7,22 @@ using WebChat.Data;
 using WebChat.Models;
 using System.Net.Http;
 using Newtonsoft.Json;
-
 using WebChat.Utils;
-
-
 using System;
 using System.Collections.Generic;
 using System.Web;
 using PusherServer;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace WebChat.Controllers
 {
     public class AuthController : Controller
     {
+        private readonly IConfiguration _config;
         private Pusher pusher;
         private User user;
-
-        
+     
         public IActionResult Index()
         {
             return View();
@@ -42,9 +40,10 @@ namespace WebChat.Controllers
             }
 
             user = new User();
-            var aes = new AesEncryption();
-            var encryptedUserName = aes.Encrypt(Encoding.UTF8.GetBytes(user_name));
             
+            string contactsSource = _config.GetValue<string>("ContactListSource");
+
+            if (contactsSource == "VM") { 
             using (var httpClient = new HttpClient())
             {
                 using (var response = await httpClient.GetAsync("http://localhost:1984/user/" + user_name))
@@ -53,19 +52,17 @@ namespace WebChat.Controllers
                     user = JsonConvert.DeserializeObject<User>(apiResponse);
                 }
             }
-            /*
-            using (var client = new HttpClient())
+            } else
             {
-                var content = new FormUrlEncodedContent(new[]
-                {
-                new KeyValuePair<string, string>("", "encryptedUserName")
-            });
-                var result = await client.PostAsync("http://localhost:1984/login", content);
-                string resultContent = await result.Content.ReadAsStringAsync();
-                user = JsonConvert.DeserializeObject<User>(resultContent);
-                Console.WriteLine(resultContent);
+                user = await _context.User.FirstOrDefaultAsync(m => m.name == user_name);
+                if (user == null)
+            {
+                user = new User { name = user_name };
+                _context.Add(user);
+                await _context.SaveChangesAsync();
+
             }
-            */
+            }
             HttpContext.Session.SetInt32("user", user.id);
 
             TempData["userid"] = user.id;
@@ -75,11 +72,11 @@ namespace WebChat.Controllers
         }
 
         private readonly WebChatContext _context;
-
-        
-        public AuthController(WebChatContext context)
+      
+        public AuthController(WebChatContext context, IConfiguration iConfig )
         {
             _context = context;
+            _config = iConfig;
             var options = new PusherOptions();
             options.Cluster = "ap1";
 
@@ -91,8 +88,10 @@ namespace WebChat.Controllers
            );
         }
 
-        //class constructor
-
+        private bool UserExists(int id)
+        {
+            return _context.User.Any(e => e.id == id);
+        }
 
         [Route("pusher/auth")]
         public JsonResult AuthForChannel(string channel_name, string socket_id)
@@ -102,11 +101,9 @@ namespace WebChat.Controllers
                 return Json(new { status = "error", message = "User is not logged in" });
             }
             var id = HttpContext.Session.GetInt32("user");
-            //var currentUser = _context.User.FirstOrDefault(m => m.id == id);
 
             if (channel_name.IndexOf("presence") >= 0)
             {
-
                 var channelData = new PresenceChannelData()
                 {
                     user_id = HttpContext.Session.GetInt32("user").ToString(),
@@ -118,9 +115,7 @@ namespace WebChat.Controllers
                 };
 
                 var presenceAuth = pusher.Authenticate(channel_name, socket_id, channelData);
-
                 return Json(presenceAuth);
-
             }
 
             if (channel_name.IndexOf(HttpContext.Session.GetInt32("user").ToString()) == -1)

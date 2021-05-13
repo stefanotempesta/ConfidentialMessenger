@@ -12,6 +12,7 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using WebChat.Utils;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 
 namespace WebChat.Controllers
@@ -19,10 +20,11 @@ namespace WebChat.Controllers
     public class ChatController : Controller
     {
         private readonly WebChatContext _context;
-
-        public ChatController(WebChatContext context)
+        private readonly IConfiguration _config;
+        public ChatController(WebChatContext context, IConfiguration iConfig)
         {
             _context = context;
+            _config = iConfig;
             var options = new PusherOptions();
             options.Cluster = "ap1";
             pusher = new Pusher(
@@ -43,36 +45,36 @@ namespace WebChat.Controllers
             var id = HttpContext.Session.GetInt32("user");
 
             List<User> userList = new List<User>();
-            using (var httpClient = new HttpClient())
-            {
-                using (var response = await httpClient.GetAsync("http://localhost:1984/users"))
-                {
-                      string apiResponse = await response.Content.ReadAsStringAsync();
-                  //  string apiResponse = "[{\"id\":1,\"name\":\"ryan\"},{\"id\":2,\"name\":\"rey\"},{\"id\":3,\"name\":\"heelo\"},{\"id\":4,\"name\":\"debbie\"},{\"id\":5,\"name\":\"ringo\"},{\"id\":6,\"name\":\"mike\"},{\"id\":7,\"name\":\"bruce\"}]";
-                    //Console.WriteLine(apiResponse);
-                    userList = JsonConvert.DeserializeObject<List<User>>(apiResponse);
-                    //Console.WriteLine(userList[0].name);
-                   
-                }
-            }
+            User currentUser = null;
 
-            var currentUser = userList.SingleOrDefault(r => r.id == id);
-            if (currentUser != null)
+            string contactsSource = _config.GetValue<string>("ContactListSource");
+            if (contactsSource == "VM")
             {
-                userList.Remove(currentUser);
-            }
-            var aes = new AesEncryption();
-            foreach (User user in userList)
+                using (var httpClient = new HttpClient())
+                {
+                    using (var response = await httpClient.GetAsync("http://localhost:1984/users"))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+
+                        userList = JsonConvert.DeserializeObject<List<User>>(apiResponse);
+
+                    }
+                }
+
+                currentUser = userList.SingleOrDefault(r => r.id == id);
+                if (currentUser != null)
+                {
+                    userList.Remove(currentUser);
+                }
+            } else
             {
-               // user.name = Encoding.UTF8.GetString(aes.Decrypt(Encoding.UTF8.GetBytes(user.name)));
+                userList = await _context.User.Where(u => u.id != id).ToListAsync();
+                currentUser = await _context.User.FirstOrDefaultAsync(m => m.id == id);
             }
                 
             ViewBag.allUsers = userList;
-
-            // JsonConvert.DeserializeObject<List<PopupMessage>>(TempData["PopupMessages"]);
             ViewBag.currentid = currentUser.id;
             ViewBag.currentname = currentUser.name;
-            // Console.WriteLine(ViewBag.currentUser);
 
             return View();
         }

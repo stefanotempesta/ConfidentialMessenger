@@ -9,33 +9,41 @@ using WebChat.Data;
 using WebChat.Models;
 using System.Net.Http;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
 
 namespace WebChat.Controllers
 {
     public class UsersController : Controller
     {
         private readonly WebChatContext _context;
-
-        public UsersController(WebChatContext context)
+        private readonly IConfiguration _config;
+        public UsersController(WebChatContext context, IConfiguration iConfig)
         {
             _context = context;
+            _config = iConfig;
         }
 
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            List<User> userList = new List<User>();
-            using (var httpClient = new HttpClient())
+            
+            string contactsSource = _config.GetValue<string>("ContactListSource");
+
+            if (contactsSource == "VM")
             {
-                using (var response = await httpClient.GetAsync("https://52.170.57.228:1984/users"))
+                List<User> userList = new List<User>();
+                using (var httpClient = new HttpClient())
                 {
-                    string apiResponse = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine(apiResponse);
-                    userList = JsonConvert.DeserializeObject<List<User>>(apiResponse);
+                    using (var response = await httpClient.GetAsync("https://localhost:1984/users"))
+                    {
+                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        userList = JsonConvert.DeserializeObject<List<User>>(apiResponse);
+                    }
                 }
+                return View(userList);
             }
-            return View(userList);
-            //return View(await _context.User.ToListAsync());
+            
+            return View(await _context.User.ToListAsync());
         }
 
         // GET: Users/Details/5
