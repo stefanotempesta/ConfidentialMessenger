@@ -1,7 +1,10 @@
 # ConfidentialMessenger
-ConfidentialMessenger is a web chat application that utilizes the confidential computing capabilities of Azure to protect data (in this case the contacts list) while in use. It modifies and builds on a simple chat application described in https://pusher.com/tutorials/chat-aspnet/ introducing the feature to store contact list data in an environment with confidential computing support. The system can be configured to use either an Azure confidential database or a confidential enclave in an Azure virtual machine to store the sensitive data.
-
-# A. Using Confidential SQL Database in Azure
+ConfidentialMessenger is a web chat application that demonstrates the use of Azure confidential computing features to protect data. The application modifies and builds on a simple web chat application described in the following tutorial, https://pusher.com/tutorials/chat-aspnet/. The main modification is to use Azure confidential computing technologies to store the contacts list which is considered to be a sensitive data for the system. 
+The two ways the contact list is to be stored is: 
+  a. stored in a confidential database created in this way,confidential database you create in this way: https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-enclaves?view=sql-server-ver15
+  b. stored in a confidential enclave which can be created in Azure using a special VM: https://docs.microsoft.com/en-us/azure/confidential-computing/quick-create-portal
+  
+# A. Using Confidential SQL Database
 
 The simpler way to include confidential computing in your application is to use an Azure SQL database with such support. To learn more about confidential SQL databases, refer to the following document.
 https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-enclaves?view=sql-server-ver15
@@ -25,7 +28,7 @@ https://docs.microsoft.com/en-us/azure/azure-sql/database/always-encrypted-encla
 
 6. The setup of the system is complete and the application can be run and tested locally. Use the Start Debugging/Start without Debugging command on Visual Studio which should open a page in your browser showing you the login page for the ConfidentialMessenger. The username is not case-sensitive. If a username does not exist in the contacts list, that username will be added and the user will be signed and logged in. If the username already exists, the user will be logged in with that username and his/her conversations will be retrieved as necessary.
 
-# B. Using Confidential Enclave in Azure VM
+# B. Using Confidential Enclave in Special Azure VM
 You can also use a confidential enclave in a special Azure VM to store sensitive data. In this application, the contacts list data is stored in a VM enclave. The ContactsEnclave C++ application uses the openenclave architecture to store and process the contacts list and acts as a REST server to client applications requesting such data. 
 
 # I. ContactsEnclave
