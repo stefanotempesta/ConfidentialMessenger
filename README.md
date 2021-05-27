@@ -1,5 +1,5 @@
 # ConfidentialMessenger
-ConfidentialMessenger is a web chat application that demonstrates the use of Azure confidential computing features to protect data. The application modifies and builds on a simple web chat application described in the following tutorial, https://pusher.com/tutorials/chat-aspnet/. The main modification is to use Azure confidential computing technologies to store the contacts list which is considered to be a sensitive data for the system. 
+ConfidentialMessenger is a web chat application that demonstrates the use of Azure confidential computing features to protect data. The application builds on a simple web chat application enhancing the system's protection of sensitive data by using Azure's confidential computing technologies. 
 The two ways the contact list is to be stored is: 
   a. stored in a confidential database created in this way,confidential database you create in this way: https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-enclaves?view=sql-server-ver15
   b. stored in a confidential enclave which can be created in Azure using a special VM: https://docs.microsoft.com/en-us/azure/confidential-computing/quick-create-portal
