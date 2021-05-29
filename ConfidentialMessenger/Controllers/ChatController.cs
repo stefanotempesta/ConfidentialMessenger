@@ -34,7 +34,17 @@ namespace WebChat.Controllers
                options
            );
         }
-        
+
+        [Route("logout")]
+        public IActionResult Logout()
+        {
+
+            HttpContext.Session.Remove("user");
+            TempData.Remove("userid");
+            TempData.Remove("username");
+
+            return Redirect("/");
+        }
         public async Task<IActionResult> Index()
         {
 
