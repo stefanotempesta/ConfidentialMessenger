@@ -102,8 +102,8 @@
 
 
             //Pusher client side setup
-            const pusher = new Pusher('224a25b62e672be2a092', {
-                cluster:'ap1'
+            const pusher = new Pusher('@ViewBag.pusherappkey', {
+                cluster: '@ViewBag.pushercluster'
             });
 
             pusher.connection.bind('connected', function() {
@@ -176,7 +176,6 @@
         function loadChat( chat_data ) {
             $('.chat__main').empty();
             chat_data.forEach( function(data) {
-                console.log(data);
                 displayMessage(data);
             });
 

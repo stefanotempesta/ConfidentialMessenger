@@ -46,8 +46,9 @@ namespace WebChat.Controllers
             if (contactsSource == "VM") { 
             using (var httpClient = new HttpClient())
             {
-                using (var response = await httpClient.GetAsync("http://localhost:1984/user/" + user_name))
-                {
+                    // using (var response = await httpClient.GetAsync("http://localhost:1984/user/" + user_name))
+                    using (var response = await httpClient.GetAsync(_config.GetValue<string>("ContactListServerHostName") + "user/" + user_name))
+                    {
                      string apiResponse = await response.Content.ReadAsStringAsync();                    
                     user = JsonConvert.DeserializeObject<User>(apiResponse);
                 }
@@ -78,12 +79,20 @@ namespace WebChat.Controllers
             _context = context;
             _config = iConfig;
             var options = new PusherOptions();
-            options.Cluster = "ap1";
-
+            //  options.Cluster = "ap1";
+            options.Cluster = _config.GetValue<string>("PusherCluster");
+            /*
+                        pusher = new Pusher(
+                           "1186554",
+                           "224a25b62e672be2a092",
+                           "23ab34ee56aceeb0efc2",
+                           options
+                       );
+            */
             pusher = new Pusher(
-               "1186554",
-               "224a25b62e672be2a092",
-               "23ab34ee56aceeb0efc2",
+               _config.GetValue<string>("PusherAppId"),
+               _config.GetValue<string>("PusherAppKey"),
+               _config.GetValue<string>("PusherAppSecret"),
                options
            );
         }

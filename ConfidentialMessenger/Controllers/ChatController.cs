@@ -26,13 +26,20 @@ namespace WebChat.Controllers
             _context = context;
             _config = iConfig;
             var options = new PusherOptions();
-            options.Cluster = "ap1";
+           // options.Cluster = "ap1";
+            options.Cluster = _config.GetValue<string>("PusherCluster");
+            /*  pusher = new Pusher(
+                 "1186554",
+                 "224a25b62e672be2a092",
+                 "23ab34ee56aceeb0efc2",
+                 options
+             ); */
             pusher = new Pusher(
-               "1186554",
-               "224a25b62e672be2a092",
-               "23ab34ee56aceeb0efc2",
-               options
-           );
+                 _config.GetValue<string>("PusherAppId"),
+                 _config.GetValue<string>("PusherAppKey"),
+                 _config.GetValue<string>("PusherAppSecret"),
+                 options
+             );
         }
 
         [Route("logout")]
@@ -62,7 +69,9 @@ namespace WebChat.Controllers
             {
                 using (var httpClient = new HttpClient())
                 {
-                    using (var response = await httpClient.GetAsync("http://localhost:1984/users"))
+                   // using (var response = await httpClient.GetAsync("http://localhost:1984/users"))
+                    using (var response = await httpClient.GetAsync(_config.GetValue<string>("ContactListServerHostName") + "users"))
+                    
                     {
                         string apiResponse = await response.Content.ReadAsStringAsync();
 
@@ -85,6 +94,8 @@ namespace WebChat.Controllers
             ViewBag.allUsers = userList;
             ViewBag.currentid = currentUser.id;
             ViewBag.currentname = currentUser.name;
+            ViewBag.pusherappkey = _config.GetValue<string>("PusherAppKey");
+            ViewBag.pushercluster = _config.GetValue<string>("PusherCluster");
 
             return View();
         }
@@ -133,6 +144,14 @@ namespace WebChat.Controllers
 
             _context.Add(convo);
             _context.SaveChanges();
+
+            var conversationChannel = getConvoChannel((int)id, contact);
+
+            pusher.TriggerAsync(
+              conversationChannel,
+              "new_message",
+              convo,
+              new TriggerOptions() { SocketId = socket_id });
 
             return Json(convo);
 
